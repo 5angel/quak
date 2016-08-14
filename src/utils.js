@@ -5,8 +5,22 @@ export function isArray(value) {
   return value instanceof Array
 }
 
+export function isObject(value, allowNull = false) {
+  const result = typeof value === 'object'
+
+  if (result && !value) {
+    return allowNull
+  }
+
+  return result
+}
+
 export function isUndef(value) {
   return typeof value === void(0)
+}
+
+export function isFunction(value) {
+  return typeof value === 'function'
 }
 
 export function isView(value) {
@@ -30,22 +44,31 @@ export function extend(target, ...rest) {
   return target
 }
 
+export function resolve(scope, expr, cb) {
+  return function () {
+    try {
+      const keys = !isObject(scope) ? []: Object.keys(scope)
+      const vals = keys.map(k => scope[k])
+      const result = new Function(
+        keys.join(','),
+        `return ${expr}`
+      ).call(scope, ...vals)
+
+      isFunction(cb) && cb()
+
+      return result
+    } catch (error) {
+
+    }
+  }
+}
+
 export function contains(collection, value) {
   return collection.indexOf(value) !== -1
 }
 
 export function toArray(collection) {
   return Array.prototype.slice.call(collection)
-}
-
-export function resolve(expr, model) {
-  const path = expr.split('.')
-
-  while (model && path.length) {
-    model = model[path.shift()]
-  }
-
-  return model
 }
 
 export function walkDom(node, cb) {

@@ -1,6 +1,5 @@
 import {
-  extend,
-  resolve,
+  resolve
 } from 'utils'
 
 import View from './view'
@@ -16,7 +15,7 @@ export default class EachView extends View {
 
   render(model) {
     const frag = document.createDocumentFragment()
-    const items = resolve(this._expr, extend(model, this._parent)) || []
+    const items = resolve(model, this._expr)() || []
 
     for (const model of items) {
       const temp = document.createTextNode('')

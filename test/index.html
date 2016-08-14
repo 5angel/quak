@@ -7,13 +7,8 @@
   <body>
     <test></test>
     <script id="test" type="text/template">
-      <h1>{title}</h1>
-      <button type="button" onclick="{this.add()}">add</button>
-      <ul>
-        <li each="{list}" class="{this === 'test1'}">
-          {this}
-        </li>
-      </ul>
+      <h1>{this.title}</h1>
+      <button type="button" onclick="{this.change()}">add</button>
     </script>
     <script src="./../lib/quak.js"></script>
     <script>
@@ -22,15 +17,10 @@
         class {
           constructor() {
             this.title = 'fuck'
-            this.list = [
-              'test1',
-              'test2',
-              'test3'
-            ]
           }
 
-          add() {
-            this.list.push('new')
+          change() {
+            this.title = 'shit'
           }
         }
       )

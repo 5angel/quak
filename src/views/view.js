@@ -1,6 +1,5 @@
 import {
   resolve,
-  extend,
   isView,
   isUndef,
   getEvent,
@@ -26,7 +25,18 @@ export default class View {
 
     container.innerHTML = this._template
 
-    const attrs = parse(container)
+    const [attrs, binds] = parse(container)
+
+    for (const list of binds) {
+      const {node, tmpl} = list
+      let result = tmpl
+
+      for (const {value,expr} of list) {
+        result = result.replace(value, resolve(model, expr))
+      }
+
+      node.nodeValue = result
+    }
 
     for (const prop in attrs) {
       if (attrs.hasOwnProperty(prop)) {
@@ -42,7 +52,7 @@ export default class View {
 
             this._views[prop] = list
           } else if (event) {
-            const handler = new Function('$event', `return ${expr}`).bind(model)
+            const handler = resolve(model, expr, this.update.bind(this))
             const list = this._handlers[event] || []
 
             list.push({node, handler})
@@ -61,5 +71,9 @@ export default class View {
     this._anchor.parentNode.insertBefore(frag, this._anchor)
 
     return this
+  }
+
+  update() {
+
   }
 }
