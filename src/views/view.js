@@ -12,8 +12,10 @@ export default class View {
   constructor(elem, tmpl) {
     this._template = tmpl
     this._anchor = document.createTextNode('')
-    this._nodes = []
     this._views = {}
+    this._nodes = []
+    this._bindings = []
+    this._attributes = {}
     this._handlers = {}
 
     elem.parentNode.replaceChild(this._anchor, elem)
@@ -27,16 +29,8 @@ export default class View {
 
     const [attrs, binds] = parse(container)
 
-    for (const list of binds) {
-      const {node, tmpl} = list
-      let result = tmpl
-
-      for (const {value,expr} of list) {
-        result = result.replace(value, resolve(model, expr))
-      }
-
-      node.nodeValue = result
-    }
+    this._attributes = attrs
+    this._bindings = binds
 
     for (const prop in attrs) {
       if (attrs.hasOwnProperty(prop)) {
@@ -70,10 +64,21 @@ export default class View {
 
     this._anchor.parentNode.insertBefore(frag, this._anchor)
 
-    return this
+    return this.update(model)
   }
 
-  update() {
+  update(model = {}) {
+    for (const list of this._bindings) {
+      const {node, tmpl} = list
+      let result = tmpl
 
+      for (const {value,expr} of list) {
+        result = result.replace(value, resolve(model, expr))
+      }
+
+      node.nodeValue = result
+    }
+
+    return this
   }
 }

@@ -1,10 +1,14 @@
 const path = require('path')
+const webpack = require('webpack')
 
 module.exports = {
-  entry: './src/entry.js',
+  entry: {
+    'quak': './src/entry.js',
+    'quak.min': './src/entry.js'
+  },
   output: {
     path: './lib',
-    filename: 'quak.js',
+    filename: '[name].js',
     libraryTarget: 'umd',
     library: 'quak'
   },
@@ -14,6 +18,12 @@ module.exports = {
       path.resolve('./src/views')
     ]
   },
+  plugins: [
+    new webpack.optimize.UglifyJsPlugin({
+      include: /\.min\.js$/,
+      minimize: true
+    })
+  ],
   module: {
     loaders: [{
       test: /\.js$/,

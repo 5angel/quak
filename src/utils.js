@@ -54,7 +54,7 @@ export function resolve(scope, expr, cb) {
         `return ${expr}`
       ).call(scope, ...vals)
 
-      isFunction(cb) && cb()
+      isFunction(cb) && cb(scope)
 
       return result
     } catch (error) {

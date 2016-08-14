@@ -7,7 +7,11 @@
   <body>
     <test></test>
     <script id="test" type="text/template">
-      <h1>{this.title}</h1>
+      <h1>{title}</h1>
+      And then they lived<br/>
+      changed to: {title}</br>
+      Long lived eh!
+      <br/>
       <button type="button" onclick="{this.change()}">add</button>
     </script>
     <script src="./../lib/quak.js"></script>
@@ -20,7 +24,7 @@
           }
 
           change() {
-            this.title = 'shit'
+            this.title = Math.random() * 100
           }
         }
       )
