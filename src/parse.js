@@ -1,40 +1,35 @@
 import {
-  contains,
+  isView,
   toArray,
   walkDom,
 } from './utils'
 
 const RE_EXPR = /^{(.+)}$/
-const SPECIAL = ['each']
 
 export default function parse(container) {
-  const children = {}
+  const attrs = {}
 
   walkDom(container, node => {
-    let hasView = false
+    let viewFound = false
 
     if (node.nodeType === 1) {
-      for (const attr of toArray(node.attributes)) {
-        hasView = hasView || contains(SPECIAL, attr.name)
+      for (const {value, name} of toArray(node.attributes)) {
+        viewFound = viewFound || isView(name)
 
-        const chldn = children[attr.name] || []
-        const match = attr.value.match(RE_EXPR)
+        const list = attrs[name] || []
+        const [,expr] = value.match(RE_EXPR) || []
 
-        if (match) {
-          const expr = match[1]
+        if (expr) {
+          node.removeAttribute(name)
+          list.push({node, expr})
 
-          if (hasView) {
-            node.removeAttribute(attr.name)
-            chldn.push({node, expr})
-
-            children[attr.name] = chldn
-          }
+          attrs[name] = list
         }
       }
     }
 
-    return !hasView
+    return !viewFound
   })
 
-  return children
+  return attrs
 }

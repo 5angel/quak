@@ -6,6 +6,12 @@ export function isUndef(value) {
   return typeof value === void(0)
 }
 
+const SPECIAL = ['each']
+
+export function isView(value) {
+  return contains(SPECIAL, value)
+}
+
 export function extend(target, ...rest) {
   for (const obj of rest) {
     for (const prop in obj) {

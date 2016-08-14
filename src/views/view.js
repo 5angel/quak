@@ -1,5 +1,6 @@
 import {
   resolve,
+  isView,
   isUndef,
   toArray
 } from 'utils'
@@ -22,15 +23,22 @@ export default class View {
 
     container.innerHTML = this._template
 
-    const found = parse(container)
+    const attrs = parse(container)
 
-    for (const prop in found) {
-      this._views[prop] = found[prop].map(({node,expr}) => {
-        const Fn = require(`./${prop}`)
-        const view = new Fn(node, node.outerHTML, expr, this)
+    for (const prop in attrs) {
+      if (attrs.hasOwnProperty(prop)) {
+        for (const {node, expr} of attrs[prop]) {
+          if (isView(prop)) {
+            const list = this._views[prop] || []
+            const Fn = require(`./${prop}`)
+            const view = new Fn(node, node.outerHTML, expr, this)
 
-        return view.render(model)
-      })
+            list.push(view.render(model))
+
+            this._views[prop] = list
+          }
+        }
+      }
     }
 
     this._nodes = toArray(container.childNodes)
