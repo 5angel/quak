@@ -11,9 +11,14 @@ export default class EachView extends View {
     this._expr = expr
     this._parent = parent
     this._views = []
+    this._previous = []
   }
 
   render(model) {
+    return this.update(model)
+  }
+
+  update(model) {
     const frag = document.createDocumentFragment()
     const items = resolve(model, this._expr)() || []
 
@@ -28,6 +33,8 @@ export default class EachView extends View {
     }
 
     this._anchor.parentNode.insertBefore(frag, this._anchor)
+
+    this._previous = items.slice()
 
     return this
   }

@@ -7,12 +7,16 @@
   <body>
     <test></test>
     <script id="test" type="text/template">
+      <button type="button" onclick="{this.change()}">change</button>
       <h1>{title}</h1>
       And then they lived<br/>
       changed to: {title}</br>
-      Long lived eh!
+      Long lived eh!<br/>
+      <button type="button" onclick="{this.reverse()}">reverse</button>
+      <li each="{list}">
+        {this}
+      </li>
       <br/>
-      <button type="button" onclick="{this.change()}">add</button>
     </script>
     <script src="./../lib/quak.js"></script>
     <script>
@@ -21,6 +25,17 @@
         class {
           constructor() {
             this.title = 'fuck'
+
+            this.list = [
+              0,
+              1,
+              2,
+              'fuck you'
+            ]
+          }
+
+          reverse() {
+            this.list = this.list.reverse()
           }
 
           change() {

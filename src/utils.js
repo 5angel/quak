@@ -63,6 +63,14 @@ export function resolve(scope, expr, cb) {
   }
 }
 
+export function each(collection, cb) {
+  for (const key in collection) {
+    if (collection.hasOwnProperty(key)) {
+      cb(collection[key], key)
+    }
+  }
+}
+
 export function contains(collection, value) {
   return collection.indexOf(value) !== -1
 }
