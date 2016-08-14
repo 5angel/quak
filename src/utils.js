@@ -1,3 +1,6 @@
+const SPECIAL = ['each']
+const RE_EVENTS = /^on(click)$/
+
 export function isArray(value) {
   return value instanceof Array
 }
@@ -6,10 +9,13 @@ export function isUndef(value) {
   return typeof value === void(0)
 }
 
-const SPECIAL = ['each']
-
 export function isView(value) {
   return contains(SPECIAL, value)
+}
+
+export function getEvent(str) {
+  const [,name] = str.match(RE_EVENTS) || []
+  return name
 }
 
 export function extend(target, ...rest) {

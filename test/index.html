@@ -8,9 +8,9 @@
     <test></test>
     <script id="test" type="text/template">
       <h1>{title}</h1>
-      <button type="button" onclick="{add()}">add</button>
+      <button type="button" onclick="{this.add()}">add</button>
       <ul>
-        <li each="{list}" class="fuck">
+        <li each="{list}" class="{this === 'test1'}">
           {this}
         </li>
       </ul>
@@ -27,6 +27,10 @@
               'test2',
               'test3'
             ]
+          }
+
+          add() {
+            this.list.push('new')
           }
         }
       )

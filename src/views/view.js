@@ -1,7 +1,9 @@
 import {
   resolve,
+  extend,
   isView,
   isUndef,
+  getEvent,
   toArray
 } from 'utils'
 
@@ -13,11 +15,12 @@ export default class View {
     this._anchor = document.createTextNode('')
     this._nodes = []
     this._views = {}
+    this._handlers = {}
 
     elem.parentNode.replaceChild(this._anchor, elem)
   }
 
-  render(model) {
+  render(model = {}) {
     const container = document.createElement('div')
     const frag = document.createDocumentFragment()
 
@@ -27,6 +30,8 @@ export default class View {
 
     for (const prop in attrs) {
       if (attrs.hasOwnProperty(prop)) {
+        const event = getEvent(prop)
+
         for (const {node, expr} of attrs[prop]) {
           if (isView(prop)) {
             const list = this._views[prop] || []
@@ -36,6 +41,12 @@ export default class View {
             list.push(view.render(model))
 
             this._views[prop] = list
+          } else if (event) {
+            const handler = new Function('$event', `return ${expr}`).bind(model)
+            const list = this._handlers[event] || []
+
+            list.push({node, handler})
+            node.addEventListener(event, handler)
           }
         }
       }
