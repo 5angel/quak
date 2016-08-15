@@ -1,10 +1,12 @@
 import {
   resolve,
+  extend,
   each,
   isArray,
-  isView,
-  isUndef,
-  getEvent,
+  isUndefined,
+  isTag,
+  isHandler,
+  toEvent,
   toArray
 } from 'utils'
 
@@ -17,44 +19,35 @@ export default class View {
     this._views = {}
     this._nodes = []
     this._bindings = []
-    this._attributes = {}
     this._handlers = {}
+
+    this.model = null
 
     elem.parentNode.replaceChild(this._anchor, elem)
   }
 
-  render(model = {}) {
+  mount(model) {
+    this.model = model
+
     const container = document.createElement('div')
     const frag = document.createDocumentFragment()
 
     container.innerHTML = this._template
 
-    const [attrs, binds] = parse(container)
+    this._bindings = parse(container)
 
-    this._attributes = attrs
-    this._bindings = binds
+    for (const {node, attr, expr} of this._bindings) {
+      if (isTag(attr)) {
+        // TODO: recognize views
+      } else if (isHandler(attr)) {
+        const handler = resolve(model, expr, this.update.bind(this))
+        const event = toEvent(attr)
+        const list = this._handlers[name] || []
 
-    each(attrs, (value, key) => {
-      for (const {node, expr} of attrs[key]) {
-        const event = getEvent(key)
-
-        if (isView(key)) {
-          const list = this._views[key] || []
-          const Fn = require(`./${key}`)
-          const view = new Fn(node, node.outerHTML, expr, this)
-
-          list.push(view.render(model))
-
-          this._views[key] = list
-        } else if (event) {
-          const handler = resolve(model, expr, this.update.bind(this))
-          const list = this._handlers[event] || []
-
-          list.push({node, handler})
-          node.addEventListener(event, handler)
-        }
+        list.push({node, handler})
+        node.addEventListener(event, handler)
       }
-    })
+    }
 
     this._nodes = toArray(container.childNodes)
 
@@ -64,34 +57,20 @@ export default class View {
 
     this._anchor.parentNode.insertBefore(frag, this._anchor)
 
-    return this.update(model)
+    return this.update()
   }
 
-  update(model = {}) {
-    for (const list of this._bindings) {
-      const {node, tmpl} = list
-      let result = tmpl
-
-      for (const {value,expr} of list) {
-        result = result.replace(value, resolve(model, expr))
-      }
-
-      node.nodeValue = result
+  update(model = this.model) {
+    if (model !== this.model) {
+      extend(this.model, model)
     }
 
-    const list = !isArray(this._views) ?
-      Object
-        .keys(this._views)
-        .map(key => {
-          return this._views[key]
-        })
-        .reduce((result, items) => {
-          return result.concat(items)
-        }, []) :
-      this._views
-
-    for (const view of list) {
-      view.update(model)
+    for (const {node, attr, tmpl, value, expr} of this._bindings) {
+      if (isTag(attr)) {
+        // TODO: recognize views
+      } else if (!isUndefined(tmpl)) {
+        node.nodeValue = tmpl.replace(value, resolve(model, expr))
+      }
     }
 
     return this

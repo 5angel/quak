@@ -15,6 +15,6 @@ export function link(tagName, ViewModel) {
     const html = tmpl.innerHTML.trim()
     const view = new View(node, html)
 
-    view.render(new ViewModel())
+    view.mount(new ViewModel())
   }
 }

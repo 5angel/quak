@@ -1,57 +1,52 @@
 import {
-  isView,
+  extend,
+  isTag,
+  isHandler,
   toArray,
   walkDom,
 } from './utils'
 
-const RE_ATTR_EXPR = /^{(.+)}$/
-const RE_TEXT_EXPR = /{([^{]+)}/g
+const RE_EXPR = /{([^{]+)}/g
 
 const [ELEMENT, TEXT] = [1,3]
 
+function parseExprs(str, base) {
+  const list = []
+  let match
+  while (match = RE_EXPR.exec(str)) {
+    const [value,expr] = match
+    list.push(extend({}, base, {value, expr}))
+  }
+  return list
+}
+
 export default function parse(container) {
-  const attrs = {}
-  const binds = []
+  const result = []
 
   walkDom(container, node => {
-    let viewFound = false
+    let tagFound = false
 
     switch (node.nodeType) {
       case ELEMENT:
-        for (const {value, name} of toArray(node.attributes)) {
-          viewFound = viewFound || isView(name)
+        for (const {value, name: attr} of toArray(node.attributes)) {
+          tagFound = tagFound || isTag(attr)
 
-          const list = attrs[name] || []
-          const [,expr] = value.match(RE_ATTR_EXPR) || []
-
-          if (expr) {
-            node.removeAttribute(name)
-            list.push({node, expr})
-
-            attrs[name] = list
+          if (isTag(attr) || isHandler(attr)) {
+            node.removeAttribute(attr)
           }
+
+          result.push(...parseExprs(value, {node, attr}))
         }
         break
       case TEXT:
-        let match
-        const list = []
+        const tmpl = node.nodeValue
 
-        list.node = node
-        list.tmpl = node.nodeValue
-
-        while (match = RE_TEXT_EXPR.exec(node.nodeValue)) {
-          const [value,expr] = match
-
-          list.push({value, expr})
-        }
-
-        binds.push(list)
-
+        result.push(...parseExprs(tmpl, {node, tmpl}))
         break
     }
 
-    return !viewFound
+    return !tagFound
   })
 
-  return [attrs, binds]
+  return result
 }

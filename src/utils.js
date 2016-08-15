@@ -1,4 +1,4 @@
-const SPECIAL = ['each']
+const TAG_ATTRS = ['each']
 const RE_EVENTS = /^on(click)$/
 
 export function isArray(value) {
@@ -15,19 +15,23 @@ export function isObject(value, allowNull = false) {
   return result
 }
 
-export function isUndef(value) {
-  return typeof value === void(0)
+export function isUndefined(value) {
+  return value === void(0)
 }
 
 export function isFunction(value) {
   return typeof value === 'function'
 }
 
-export function isView(value) {
-  return contains(SPECIAL, value)
+export function isTag(value) {
+  return contains(TAG_ATTRS, value)
 }
 
-export function getEvent(str) {
+export function isHandler(str) {
+  return RE_EVENTS.test(str)
+}
+
+export function toEvent(str) {
   const [,name] = str.match(RE_EVENTS) || []
   return name
 }
@@ -40,7 +44,6 @@ export function extend(target, ...rest) {
       }
     }
   }
-
   return target
 }
 
