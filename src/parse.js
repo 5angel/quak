@@ -1,52 +1,48 @@
 import {
   extend,
   isTag,
-  isHandler,
   toArray,
   walkDom,
 } from './utils'
 
 const RE_EXPR = /{([^{]+)}/g
 
-const [ELEMENT, TEXT] = [1,3]
-
-function parseExprs(str, base) {
+function parseExpressions(tmpl, attr = null) {
   const list = []
   let match
-  while (match = RE_EXPR.exec(str)) {
+  while (match = RE_EXPR.exec(tmpl)) {
     const [value,expr] = match
-    list.push(extend({}, base, {value, expr}))
+    list.push({tmpl, value, expr, attr})
   }
   return list
 }
 
 export default function parse(container) {
-  const result = []
+  const bindings = []
 
   walkDom(container, node => {
+    const list = extend([], {node})
     let tagFound = false
 
     switch (node.nodeType) {
-      case ELEMENT:
+      case 1: // element
         for (const {value, name: attr} of toArray(node.attributes)) {
           tagFound = tagFound || isTag(attr)
 
-          if (isTag(attr) || isHandler(attr)) {
-            node.removeAttribute(attr)
-          }
-
-          result.push(...parseExprs(value, {node, attr}))
+          list.push(...parseExpressions(value, attr))
         }
         break
-      case TEXT:
-        const tmpl = node.nodeValue
-
-        result.push(...parseExprs(tmpl, {node, tmpl}))
+      case 3: // text
+        list.push(...parseExpressions(node.nodeValue))
         break
+    }
+
+    if (list.length) {
+      bindings.push(list)
     }
 
     return !tagFound
   })
 
-  return result
+  return bindings
 }
