@@ -1,5 +1,4 @@
 import {
-  resolve,
   extend,
   each,
   isArray,
@@ -10,7 +9,8 @@ import {
   toArray
 } from 'utils'
 
-import parse from 'parse'
+import parse from './parse'
+import resolve from './resolve'
 
 export default class View {
   constructor(elem, tmpl) {
@@ -19,14 +19,20 @@ export default class View {
     this._views = {}
     this._nodes = []
     this._bindings = []
-    this._handlers = {}
+    this._handlers = []
 
+    this.isMounted = false
     this.model = null
 
     elem.parentNode.replaceChild(this._anchor, elem)
   }
 
   mount(model) {
+    if (this.isMounted) {
+      return this.render(model)
+    }
+
+    this.isMounted = true
     this.model = model
 
     const container = document.createElement('div')
@@ -34,36 +40,28 @@ export default class View {
 
     container.innerHTML = this._template
 
-    const bindings = parse(container)
+    const renderFn = this.render.bind(this)
 
-    for (const list of bindings) {
-      const node = list.node
+    for (const item of parse(container)) {
+      const {node, bindings, handlers} = item
 
-      for (let i = list.length - 1; i >= 0; --i) {
-        const {expr, attr} = list[i]
-
-        if (isTag(attr) || isHandler(attr)) {
-          node.removeAttribute(attr)
-          list.splice(i, 1)
-        }
-
-        if (isTag(attr)) {
-          // TODO: recognize views
-        } else if (isHandler(attr)) {
-          const handler = resolve(model, expr, this.update.bind(this))
+      this._handlers.push(...handlers.map(
+        ({expr, attr}) => {
           const event = toEvent(attr)
-          const list = this._handlers[name] || []
+          const callback = (e) => {
+            resolve(expr, renderFn)(this.model, e)
+          }
 
-          list.push({node, handler})
-          node.addEventListener(event, handler)
+          node.addEventListener(event, callback)
+
+          return {event, callback}
         }
+      ))
+
+      if (bindings.length) {
+        this._bindings.push(extend(bindings.slice(), {node}))
       }
     }
-
-    this._bindings = bindings.filter(item => {
-      return item.length
-    })
-
 
     this._nodes = toArray(container.childNodes)
 
@@ -73,10 +71,10 @@ export default class View {
 
     this._anchor.parentNode.insertBefore(frag, this._anchor)
 
-    return this.update()
+    return this.render()
   }
 
-  update(model = this.model) {
+  render(model = this.model) {
     if (model !== this.model) {
       extend(this.model, model)
     }
@@ -85,13 +83,14 @@ export default class View {
       const node = list.node
       const isTextNode = node.nodeType === 3
 
-      if (isTextNode) { // text
+      if (isTextNode) {
         node.nodeValue = list[0].tmpl
       }
 
-      for (const {value, expr, attr} of list) {
+      for (const {value, expr} of list) {
         if (isTextNode) {
-          node.nodeValue = node.nodeValue.replace(value, resolve(model, expr))
+          node.nodeValue = node.nodeValue
+            .replace(value, resolve(expr)(model))
         }
       }
     }

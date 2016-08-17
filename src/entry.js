@@ -3,7 +3,7 @@ import {
   toArray
 } from './utils'
 
-import View from 'view'
+import View from './view'
 
 export function link(tagName, ViewModel) {
   const tmpl = document.getElementById(tagName)

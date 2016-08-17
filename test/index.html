@@ -7,7 +7,7 @@
   <body>
     <test></test>
     <script id="test" type="text/template">
-      <button type="button" onclick="{this.change()}">change</button>
+      <button type="button" onclick="{this.change($event)}">change</button>
       <h1>{title}</h1>
       And then they lived<br/>
       changed to: {title}</br>
@@ -38,7 +38,7 @@
             this.list = this.list.reverse()
           }
 
-          change() {
+          change(e) {
             this.title = Math.random() * 100
           }
         }

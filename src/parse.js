@@ -1,8 +1,9 @@
 import {
   extend,
-  isTag,
   toArray,
-  walkDom,
+  isTag,
+  isHandler,
+  walkDom
 } from './utils'
 
 const RE_EXPR = /{([^{]+)}/g
@@ -18,31 +19,44 @@ function parseExpressions(tmpl, attr = null) {
 }
 
 export default function parse(container) {
-  const bindings = []
+  const result = []
 
   walkDom(container, node => {
-    const list = extend([], {node})
+    const bindings = []
+    const handlers = []
+
     let tagFound = false
 
     switch (node.nodeType) {
       case 1: // element
         for (const {value, name: attr} of toArray(node.attributes)) {
-          tagFound = tagFound || isTag(attr)
+          const hasTag = isTag(attr)
+          const hasHandler = isHandler(attr)
 
-          list.push(...parseExpressions(value, attr))
+          tagFound = tagFound || hasTag
+
+          if (hasTag || hasHandler) {
+            node.removeAttribute(attr)
+          }
+
+          const items = parseExpressions(value, attr)
+
+          hasHandler ?
+            handlers.push(...items) :
+            bindings.push(...items)
         }
         break
       case 3: // text
-        list.push(...parseExpressions(node.nodeValue))
+        bindings.push(...parseExpressions(node.nodeValue))
         break
     }
 
-    if (list.length) {
-      bindings.push(list)
+    if (bindings.length + handlers.length > 0) {
+      result.push({node, bindings, handlers})
     }
 
     return !tagFound
   })
 
-  return bindings
+  return result
 }

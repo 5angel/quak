@@ -12,10 +12,10 @@ module.exports = {
     libraryTarget: 'umd',
     library: 'quak'
   },
+  devtool: 'source-map',
   resolve: {
     root: [
-      path.resolve('./src'),
-      path.resolve('./src/views')
+      path.resolve('./src')
     ]
   },
   plugins: [

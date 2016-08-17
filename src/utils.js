@@ -1,4 +1,4 @@
-const TAG_ATTRS = ['each']
+const TAGS = ['each']
 const RE_EVENTS = /^on(click)$/
 
 export function isArray(value) {
@@ -24,7 +24,7 @@ export function isFunction(value) {
 }
 
 export function isTag(value) {
-  return contains(TAG_ATTRS, value)
+  return contains(TAGS, value)
 }
 
 export function isHandler(str) {
@@ -45,25 +45,6 @@ export function extend(target, ...rest) {
     }
   }
   return target
-}
-
-export function resolve(scope, expr, cb) {
-  return function () {
-    try {
-      const keys = !isObject(scope) ? []: Object.keys(scope)
-      const vals = keys.map(k => scope[k])
-      const result = new Function(
-        keys.join(','),
-        `return ${expr}`
-      ).call(scope, ...vals)
-
-      isFunction(cb) && cb(scope)
-
-      return result
-    } catch (error) {
-
-    }
-  }
 }
 
 export function each(collection, cb) {
