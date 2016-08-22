@@ -48,7 +48,7 @@ export default function parse(container) {
 
     result.push({node, handlers, bindings})
 
-    return handlers.some(handle => handle.scope)
+    return !handlers.some(handle => handle.scope)
   })
 
   return result

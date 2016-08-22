@@ -41,6 +41,11 @@ export default class View {
 
     container.innerHTML = this._template
 
+    for (const {node, handlers, bindings} of parse(container)) {
+      handlers.length && this._handlers.push(extend(handlers.slice(), {node}))
+      bindings.length && this._bindings.push(extend(bindings.slice(), {node}))
+    }
+
     this._nodes = toArray(container.childNodes)
 
     for (const node of this._nodes) {
@@ -48,11 +53,6 @@ export default class View {
     }
 
     this._anchor.parentNode.insertBefore(frag, this._anchor)
-
-    for (const {node, handlers, bindings} of parse(container)) {
-      this._handlers.push(extend(handlers.slice(), {node}))
-      this._bindings.push(extend(bindings.slice(), {node}))
-    }
 
     return this.render()
   }
