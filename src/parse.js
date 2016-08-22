@@ -1,10 +1,10 @@
 import {
   extend,
   toArray,
-  isTag,
-  isHandler,
   walkDom
 } from './utils'
+
+import {getHandler} from 'handlers/index'
 
 const RE_EXPR = /{([^{]+)}/g
 
@@ -18,44 +18,37 @@ function parseExpressions(tmpl, attr = null) {
   return list
 }
 
+function parseAttributes(attributes = []) {
+  const handlers = []
+  const bindings = []
+
+  for (const {value, name: attr} of toArray(attributes)) {
+    const handle = getHandler(attr)
+
+    if (handle) {
+      attributes.removeNamedItem(attr)
+      handlers.push({value, handle})
+    } else {
+      bindings.push(value, attr)
+    }
+  }
+
+  return [handlers, bindings]
+}
+
 export default function parse(container) {
   const result = []
 
   walkDom(container, node => {
-    const bindings = []
-    const handlers = []
+    const [handlers, bindings] = parseAttributes(node.attributes)
 
-    let tagFound = false
-
-    switch (node.nodeType) {
-      case 1: // element
-        for (const {value, name: attr} of toArray(node.attributes)) {
-          const hasTag = isTag(attr)
-          const hasHandler = isHandler(attr)
-
-          tagFound = tagFound || hasTag
-
-          if (hasTag || hasHandler) {
-            node.removeAttribute(attr)
-          }
-
-          const items = parseExpressions(value, attr)
-
-          hasHandler ?
-            handlers.push(...items) :
-            bindings.push(...items)
-        }
-        break
-      case 3: // text
-        bindings.push(...parseExpressions(node.nodeValue))
-        break
+    if (node.nodeType === 3) { // text
+      bindings.push(...parseExpressions(node.nodeValue))
     }
 
-    if (bindings.length + handlers.length > 0) {
-      result.push({node, bindings, handlers})
-    }
+    result.push({node, handlers, bindings})
 
-    return !tagFound
+    return handlers.some(handle => handle.scope)
   })
 
   return result

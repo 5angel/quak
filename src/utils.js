@@ -1,6 +1,3 @@
-const TAGS = ['each']
-const RE_EVENTS = /^on(click)$/
-
 export function isArray(value) {
   return value instanceof Array
 }
@@ -21,19 +18,6 @@ export function isUndefined(value) {
 
 export function isFunction(value) {
   return typeof value === 'function'
-}
-
-export function isTag(value) {
-  return contains(TAGS, value)
-}
-
-export function isHandler(str) {
-  return RE_EVENTS.test(str)
-}
-
-export function toEvent(str) {
-  const [,name] = str.match(RE_EVENTS) || []
-  return name
 }
 
 export function extend(target, ...rest) {
