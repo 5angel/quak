@@ -9,75 +9,74 @@ import {
 import parse from './parse'
 import resolve from './resolve'
 
-export default class View {
-  constructor(elem, tmpl, {
-    handlers = [],
-    bindings = []
-  } = {}) {
-    this._template = tmpl
+export function factory(elem, template = elem.outerHTML, {
+  handlers = [],
+  bindings = []
+} = {}) {
+  const anchor = document.createTextNode('')
 
-    this._bindings = handlers.slice()
-    this._handlers = bindings.slice()
+  elem.parentNode.replaceChild(anchor, elem)
 
-    this._anchor = document.createTextNode('')
-    this._nodes = []
+  return {
+    template,
+    handlers,
+    bindings,
+    anchor,
+    nodes: [],
+    mounted: false,
+    model: null
+  }
+}
 
-    this.mounted = false
-    this.model = null
-
-    elem.parentNode.replaceChild(this._anchor, elem)
+export function mount(view, model) {
+  if (view.mounted) {
+    return render(view, model)
   }
 
-  mount(model) {
-    if (this.mounted) {
-      return this.render(model)
-    }
+  view.mounted = true
+  view.model = model
 
-    this.mounted = true
-    this.model = model
+  const container = document.createElement('div')
+  const frag = document.createDocumentFragment()
 
-    const container = document.createElement('div')
-    const frag = document.createDocumentFragment()
+  container.innerHTML = view.template
 
-    container.innerHTML = this._template
-
-    for (const {node, handlers, bindings} of parse(container)) {
-      handlers.length && this._handlers.push(extend(handlers.slice(), {node}))
-      bindings.length && this._bindings.push(extend(bindings.slice(), {node}))
-    }
-
-    this._nodes = toArray(container.childNodes)
-
-    for (const node of this._nodes) {
-      frag.appendChild(node)
-    }
-
-    this._anchor.parentNode.insertBefore(frag, this._anchor)
-
-    return this.render()
+  for (const {handlers, bindings} of parse(container)) {
+    view.handlers.push(handlers)
+    view.bindings.push(bindings)
   }
 
-  render(model = this.model) {
-    if (model !== this.model) {
-      extend(this.model, model)
+  view.nodes = toArray(container.childNodes)
+
+  for (const node of view.nodes) {
+    frag.appendChild(node)
+  }
+
+  view.anchor.parentNode.insertBefore(frag, view.anchor)
+
+  return render(view)
+}
+
+export function render(view, model = view.model) {
+  if (model !== view.model) {
+    extend(view.model, model)
+  }
+
+  for (const list of view.bindings) {
+    const node = list.node
+    const isTextNode = node.nodeType === 3
+
+    if (isTextNode) {
+      node.nodeValue = list[0].tmpl
     }
 
-    for (const list of this._bindings) {
-      const node = list.node
-      const isTextNode = node.nodeType === 3
-
+    for (const {value, expr} of list) {
       if (isTextNode) {
-        node.nodeValue = list[0].tmpl
-      }
-
-      for (const {value, expr} of list) {
-        if (isTextNode) {
-          node.nodeValue = node.nodeValue
-            .replace(value, resolve(expr)(model))
-        }
+        node.nodeValue = node.nodeValue
+          .replace(value, resolve(expr)(model))
       }
     }
-
-    return this
   }
+
+  return view
 }

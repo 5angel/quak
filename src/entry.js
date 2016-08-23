@@ -1,9 +1,10 @@
 import {
   extend,
-  toArray
+  toArray,
+  isFunction
 } from './utils'
 
-import View from './view'
+import * as View from './view'
 
 export function link(tagName, ViewModel) {
   const tmpl = document.getElementById(tagName)
@@ -13,8 +14,10 @@ export function link(tagName, ViewModel) {
 
   for (const node of toArray(list)) {
     const html = tmpl.innerHTML.trim()
-    const view = new View(node, html)
+    const view = View.factory(node, html)
+    const model = isFunction(ViewModel) ?
+      new ViewModel() : ViewModel
 
-    view.mount(new ViewModel())
+    View.mount(view, model)
   }
 }

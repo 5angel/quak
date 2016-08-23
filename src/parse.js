@@ -46,9 +46,15 @@ export default function parse(container) {
       bindings.push(...parseExpressions(node.nodeValue))
     }
 
-    result.push({node, handlers, bindings})
+    handlers.node = bindings.node = node
 
-    return !handlers.some(handle => handle.scope)
+    if (handlers.length + bindings.length > 0) {
+      result.push({handlers, bindings})
+      
+      return !handlers.some(handle => handle.scope)
+    }
+
+    return true
   })
 
   return result
