@@ -13,8 +13,8 @@
       changed to: {title}</br>
       Long lived eh!<br/>
       <button type="button" onclick="{this.reverse()}">reverse</button>
-      <li each="{list}">
-        {this}
+      <li each="{item in list}">
+        {this}, {item}
       </li>
       <br/>
     </script>

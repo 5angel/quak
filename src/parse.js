@@ -22,14 +22,14 @@ function parseAttributes(attributes = []) {
   const handlers = []
   const bindings = []
 
-  for (const {value, name: attr} of toArray(attributes)) {
-    const handle = getHandler(attr)
+  for (const {value: expr, name: attr} of toArray(attributes)) {
+    const factory = getHandler(attr)
 
-    if (handle) {
+    if (factory) {
       attributes.removeNamedItem(attr)
-      handlers.push({value, handle})
+      handlers.push(factory(expr))
     } else {
-      bindings.push(value, attr)
+      bindings.push(expr, attr)
     }
   }
 
@@ -50,8 +50,8 @@ export default function parse(container) {
 
     if (handlers.length + bindings.length > 0) {
       result.push({handlers, bindings})
-      
-      return !handlers.some(handle => handle.scope)
+
+      return !handlers.some(handle => handle.model)
     }
 
     return true

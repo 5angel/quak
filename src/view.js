@@ -1,7 +1,10 @@
 import {
   extend,
   each,
+  curry,
+  defineMethods,
   isArray,
+  isFunction,
   isUndefined,
   toArray
 } from 'utils'
@@ -9,32 +12,14 @@ import {
 import parse from './parse'
 import resolve from './resolve'
 
-export function factory(elem, template = elem.outerHTML, {
-  handlers = [],
-  bindings = []
-} = {}) {
-  const anchor = document.createTextNode('')
-
-  elem.parentNode.replaceChild(anchor, elem)
-
-  return {
-    template,
-    handlers,
-    bindings,
-    anchor,
-    nodes: [],
-    mounted: false,
-    model: null
-  }
-}
-
 export function mount(view, model) {
   if (view.mounted) {
     return render(view, model)
   }
 
+  update(view, model)
+
   view.mounted = true
-  view.model = model
 
   const container = document.createElement('div')
   const frag = document.createDocumentFragment()
@@ -42,8 +27,14 @@ export function mount(view, model) {
   container.innerHTML = view.template
 
   for (const {handlers, bindings} of parse(container)) {
-    view.handlers.push(handlers)
-    view.bindings.push(bindings)
+    handlers.length && view.handlers.push(handlers)
+    bindings.length && view.bindings.push(bindings)
+  }
+
+  for (const list of view.handlers) {
+    for (const handler of list) {
+      isFunction(handler.mount) && handler.mount(list.node, view)
+    }
   }
 
   view.nodes = toArray(container.childNodes)
@@ -54,13 +45,23 @@ export function mount(view, model) {
 
   view.anchor.parentNode.insertBefore(frag, view.anchor)
 
-  return render(view)
+  return render(view, model)
 }
 
-export function render(view, model = view.model) {
-  if (model !== view.model) {
+export function unmount(view) {
+
+}
+
+export function update(view, model) {
+  if (isUndefined(model)) {
+    model = view.model
+  } else if (model !== view.model) {
     extend(view.model, model)
   }
+}
+
+export function render(view, model) {
+  update(view, model)
 
   for (const list of view.bindings) {
     const node = list.node
@@ -77,6 +78,31 @@ export function render(view, model = view.model) {
       }
     }
   }
+
+  return view
+}
+
+export function factory(elem, template = elem.outerHTML, {
+  handlers = [],
+  bindings = []
+} = {}) {
+  const anchor = document.createTextNode('')
+
+  if (elem) {
+    elem.parentNode.replaceChild(anchor, elem)
+  }
+
+  const view = {
+    template,
+    handlers,
+    bindings,
+    anchor,
+    nodes: [],
+    mounted: false,
+    model: {},
+  }
+
+  defineMethods(view, {mount, unmount, render})
 
   return view
 }

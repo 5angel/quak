@@ -12,11 +12,13 @@ export function link(tagName, ViewModel) {
 
   tmpl.parentNode.removeChild(tmpl)
 
+  const html = tmpl.innerHTML.trim()
+
   for (const node of toArray(list)) {
-    const html = tmpl.innerHTML.trim()
-    const view = View.factory(node, html)
     const model = isFunction(ViewModel) ?
       new ViewModel() : ViewModel
+
+    const view = View.factory(node, html)
 
     View.mount(view, model)
   }

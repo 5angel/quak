@@ -58,3 +58,17 @@ export function walkDom(node, cb) {
     }
   }
 }
+
+export function defineMethods(obj, config) {
+  each(config, (value, key) => {
+    defineProperty(obj, key, curry(value, obj))
+  })
+}
+
+export function defineProperty(obj, name, value) {
+  Object.defineProperty(obj, name, {value})
+}
+
+export function curry(f, ...rest) {
+  return (...more) => f(...rest, ...more)
+}
