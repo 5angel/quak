@@ -1,14 +1,10 @@
-import {
-  extend,
-  toArray,
-  walkDom
-} from './utils'
-
+import {walkNodes} from './utils/dom'
+import {each} from './utils/common'
 import {getHandler} from 'handlers/index'
 
 const RE_EXPR = /{([^{]+)}/g
 
-function parseExpressions(tmpl, attr = null) {
+const parseExpressions = (tmpl, attr = null) => {
   const list = []
   let match
   while (match = RE_EXPR.exec(tmpl)) {
@@ -18,11 +14,11 @@ function parseExpressions(tmpl, attr = null) {
   return list
 }
 
-function parseAttributes(attributes = []) {
+const parseAttributes = (attributes = []) => {
   const handlers = []
   const bindings = []
 
-  for (const {value: expr, name: attr} of toArray(attributes)) {
+  each(({value: expr, name: attr}) => {
     const factory = getHandler(attr)
 
     if (factory) {
@@ -31,7 +27,7 @@ function parseAttributes(attributes = []) {
     } else {
       bindings.push(expr, attr)
     }
-  }
+  }, attributes)
 
   return [handlers, bindings]
 }
@@ -39,7 +35,7 @@ function parseAttributes(attributes = []) {
 export default function parse(container) {
   const result = []
 
-  walkDom(container, node => {
+  walkNodes(node => {
     const [handlers, bindings] = parseAttributes(node.attributes)
 
     if (node.nodeType === 3) { // text
@@ -55,7 +51,7 @@ export default function parse(container) {
     }
 
     return true
-  })
+  }, container)
 
   return result
 }

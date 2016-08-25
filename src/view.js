@@ -1,13 +1,23 @@
 import {
+  createElem,
+  createText,
+  createFrag,
+  insertNodeAt,
+  appendNodeTo,
+  swapNodes
+} from './utils/dom'
+
+import {
+  isUndefined,
+  isFunction
+} from './utils/check'
+
+import {
   extend,
   each,
-  curry,
-  defineMethods,
-  isArray,
-  isFunction,
-  isUndefined,
-  toArray
-} from 'utils'
+  toArray,
+  defineMethods
+} from './utils/common'
 
 import parse from './parse'
 import resolve from './resolve'
@@ -21,8 +31,8 @@ export function mount(view, model) {
 
   view.mounted = true
 
-  const container = document.createElement('div')
-  const frag = document.createDocumentFragment()
+  const container = createElem('div')
+  const frag = createFrag()
 
   container.innerHTML = view.template
 
@@ -39,13 +49,10 @@ export function mount(view, model) {
 
   view.nodes = toArray(container.childNodes)
 
-  for (const node of view.nodes) {
-    frag.appendChild(node)
-  }
+  each(node => appendNodeTo(frag, node), view.nodes)
+  insertNodeAt(view.anchor, frag)
 
-  view.anchor.parentNode.insertBefore(frag, view.anchor)
-
-  return render(view, model)
+  return view.render(model)
 }
 
 export function unmount(view) {
@@ -53,10 +60,8 @@ export function unmount(view) {
 }
 
 export function update(view, model) {
-  if (isUndefined(model)) {
-    model = view.model
-  } else if (model !== view.model) {
-    extend(view.model, model)
+  if (!isUndefined(model) && model !== view.model) {
+    view.model = extend(view.model, model)
   }
 }
 
@@ -86,10 +91,10 @@ export function factory(elem, template = elem.outerHTML, {
   handlers = [],
   bindings = []
 } = {}) {
-  const anchor = document.createTextNode('')
+  const anchor = createText('')
 
   if (elem) {
-    elem.parentNode.replaceChild(anchor, elem)
+    swapNodes(elem, anchor)
   }
 
   const view = {
@@ -102,7 +107,5 @@ export function factory(elem, template = elem.outerHTML, {
     model: {},
   }
 
-  defineMethods(view, {mount, unmount, render})
-
-  return view
+  return defineMethods(view, {mount, unmount, render})
 }

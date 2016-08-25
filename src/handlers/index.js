@@ -5,7 +5,7 @@ const NAMED = {
   each
 }
 
-export function getHandler(name) {
+export const getHandler = (name) => {
   let handler = NAMED[name]
 
   if (handler) {
@@ -21,6 +21,6 @@ export function getHandler(name) {
   return null
 }
 
-export function addHandler(name, handler) {
+export const addHandler = (name, handler) => {
   return NAMED[name] = handler
 }

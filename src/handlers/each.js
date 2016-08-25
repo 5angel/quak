@@ -1,9 +1,9 @@
+import {isUndefined} from 'utils/check'
+
 import {
-  isUndefined,
   extend,
-  curry,
   defineMethods
-} from 'utils'
+} from 'utils/common'
 
 const RE_EXPR = /^{(?:(\S+)in)*(\S+)}$/
 
